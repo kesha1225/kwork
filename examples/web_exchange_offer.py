@@ -14,17 +14,14 @@ async def main() -> None:
         raise RuntimeError("Set KWORK_PROJECT_ID env var to run this example.")
 
     async with Kwork(login=login, password=password) as api:
-        ua = (
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:147.0) "
-            "Gecko/20100101 Firefox/147.0"
-        )
+        ua = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:147.0) Gecko/20100101 Firefox/147.0"
 
         await api.web_login(url_to_redirect="/exchange", user_agent=ua)
 
         result = await api.web.submit_exchange_offer(
             project_id=int(project_id),
             offer_type="custom",
-            description="Добрый день! Готов предложить услугу. Добрый день! Готов предложить услугу. Добрый день! Готов предложить услугу. Добрый день! Готов предложить услугу. Добрый день! Готов предложить услугу.",
+            description="Добрый день! Готов предложить услугу." * 10,  # 150 символов минимум!
             kwork_duration=3,
             kwork_price=1000,
             kwork_name="<div>VB cкрипт приема платежей для сайта</div>",

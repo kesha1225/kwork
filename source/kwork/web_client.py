@@ -127,9 +127,7 @@ class KworkWebClient:
                 status = resp2.status
 
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(
-                "Web login via token completed: status=%s final_url=%s", status, final_url
-            )
+            logger.debug("Web login via token completed: status=%s final_url=%s", status, final_url)
 
         return WebLoginResult(
             token=payload.get("token"),
