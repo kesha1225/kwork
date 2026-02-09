@@ -15,7 +15,12 @@ from kwork.schema import (
 from kwork.web_client import KworkWebClient, WebLoginResult
 
 
-class KworkClient(OpenAPIMethodsMixin, APKExtraMethodsMixin, KworkAPI):
+# IMPORTANT:
+# `OpenAPIMethodsMixin` (auto-generated) inherits a `Protocol` that defines `request(...) -> dict`
+# as a stub with `...` body. If it appears before `KworkAPI` in the MRO, Python will resolve
+# `self.request` to that stub at runtime, returning `None` and breaking the client.
+# Put `KworkAPI` first so the real implementations win.
+class KworkClient(KworkAPI, OpenAPIMethodsMixin, APKExtraMethodsMixin):
     _web_client: KworkWebClient | None = None
 
     @property

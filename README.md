@@ -41,6 +41,8 @@ asyncio.run(main())
 
 📖 **[Полный туториал](docs/tutorial.md)** — API, боты, прокси, примеры
 
+📚 **[Документация (оглавление)](docs/README.md)** — навигация по разделам
+
 ## Web-авторизация (kwork.ru)
 
 Некоторые действия в мобильном приложении выполняются через WebView (домен `kwork.ru`), а не через `api.kwork.ru`.
@@ -53,18 +55,22 @@ from kwork import Kwork
 async def main():
     async with Kwork(login="login", password="password") as api:
         await api.web_login(url_to_redirect="/exchange")
-        resp = await api.web.create_exchange_offer(
-            want_id=2920487,
+        # Отклик на проект/заказ на бирже (web-flow, как в браузере):
+        resp = await api.web.submit_exchange_offer(
+            project_id=2920487,
             offer_type="custom",
             description="Добрый день! Готов предложить услугу.",
-            kwork_duration=1,
-            kwork_price=500,
-            kwork_name="Мое предложение",
+            kwork_duration=3,
+            kwork_price=1000,
+            kwork_name="<div>Название предложения</div>",
         )
         print(resp["status"], resp["json"] or resp["text"][:200])
 
 asyncio.run(main())
 ```
+
+Если периодически появляется ошибка `"Подтвердите, что вы не робот"`, это антибот-защита сайта.
+Обычно помогает повторить попытку или использовать `proxy=...` (см. `docs/tutorial.md#прокси`).
 
 ## Contributors
 
