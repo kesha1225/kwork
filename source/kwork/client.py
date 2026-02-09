@@ -12,9 +12,35 @@ from kwork.schema import (
     User,
     WantWorker,
 )
+from kwork.web_client import KworkWebClient, WebLoginResult
 
 
 class KworkClient(OpenAPIMethodsMixin, APKExtraMethodsMixin, KworkAPI):
+    _web_client: KworkWebClient | None = None
+
+    @property
+    def web(self) -> KworkWebClient:
+        """
+        Web client for kwork.ru that uses the official mobile /getWebAuthToken flow.
+        """
+        if self._web_client is None:
+            self._web_client = KworkWebClient(self)
+        return self._web_client
+
+    async def web_login(
+        self,
+        *,
+        url_to_redirect: str | None = "/",
+        user_agent: str | None = None,
+    ) -> WebLoginResult:
+        """
+        Establish a web session (kwork.ru cookies) using the official mobile app flow.
+        """
+        return await self.web.login_via_mobile_web_auth_token(
+            url_to_redirect=url_to_redirect,
+            user_agent=user_agent,
+        )
+
     async def get_me(self) -> Actor:
         data = await self.request("post", "actor", use_token=True)
         return Actor(**data["response"])

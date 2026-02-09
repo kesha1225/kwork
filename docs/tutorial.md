@@ -167,3 +167,4 @@ api = Kwork(
 | `categories.py`       | Категории и проекты  |
 | `dialogs.py`          | Работа с диалогами   |
 | `projects_monitor.py` | Мониторинг проектов  |
+| `web_exchange_offer.py` | Web-авторизация (как в мобилке) + отклик на бирже |
