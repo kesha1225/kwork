@@ -17,7 +17,7 @@
 - [Примеры](#примеры)
 - [Разработка](#разработка)
 
-## Установка
+## Установка {#установка}
 
 Рекомендуемый способ (через `uv`):
 
@@ -37,7 +37,7 @@ pip install kwork
 pip install "kwork[proxy]"
 ```
 
-## Быстрый старт
+## Быстрый старт {#быстрый-старт}
 
 ```python
 import asyncio
@@ -58,7 +58,7 @@ async def main() -> None:
 asyncio.run(main())
 ```
 
-## API-клиент: `Kwork` / `KworkClient`
+## API-клиент: `Kwork` / `KworkClient` {#api-клиент-kwork--kworkclient}
 
 ```python
 from kwork import Kwork  # алиас на KworkClient
@@ -120,7 +120,7 @@ data = await api.request_multipart(
 )
 ```
 
-## Проекты (биржа): получить список
+## Проекты (биржа): получить список {#проекты-биржа-получить-список}
 
 ```python
 projects = await api.get_projects(
@@ -133,7 +133,7 @@ projects = await api.get_projects(
 print("projects:", len(projects))
 ```
 
-## Отклик на проект (web-flow как в браузере)
+## Отклик на проект (web-flow как в браузере) {#отклик-на-проект-web-flow-как-в-браузере}
 
 Почему это отдельный раздел:
 
@@ -177,7 +177,7 @@ asyncio.run(main())
 
 - это **web-endpoint**, он может меняться без предупреждения (это не часть OpenAPI `api.kwork.ru`)
 
-## Бот: `KworkBot`
+## Бот: `KworkBot` {#бот-kworkbot}
 
 `KworkBot` наследуется от `KworkClient` и слушает события через WebSocket:
 `wss://notice.kwork.ru/ws/public/{channel}`.
@@ -209,7 +209,7 @@ async def fallback(message: Message) -> None:
 asyncio.run(bot.run())
 ```
 
-## Прокси и "Подтвердите, что вы не робот"
+## Прокси и "Подтвердите, что вы не робот" {#прокси-и-подтвердите-что-вы-не-робот}
 
 Иногда `kwork.ru`/`api.kwork.ru` может отвечать антибот-сообщением вида:
 `"Подтвердите, что вы не робот"`.
@@ -239,7 +239,7 @@ api = Kwork(
 )
 ```
 
-## Ошибки и ретраи
+## Ошибки и ретраи {#ошибки-и-ретраи}
 
 Исключения лежат в `source/kwork/exceptions.py`:
 
@@ -263,7 +263,7 @@ api = Kwork(
 )
 ```
 
-## Примеры
+## Примеры {#примеры}
 
 Папка `examples/`:
 
@@ -279,7 +279,7 @@ api = Kwork(
 KWORK_LOGIN='...' KWORK_PASSWORD='...' KWORK_PROJECT_ID='3094218' uv run python examples/web_exchange_offer.py
 ```
 
-## Разработка
+## Разработка {#разработка}
 
 Локальные проверки:
 
@@ -287,4 +287,3 @@ KWORK_LOGIN='...' KWORK_PASSWORD='...' KWORK_PROJECT_ID='3094218' uv run python 
 uv run ruff check source/kwork examples
 uv run pyright -p pyrightconfig.json
 ```
-

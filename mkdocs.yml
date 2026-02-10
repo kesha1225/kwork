@@ -6,8 +6,11 @@ repo_url: https://github.com/kesha1225/pykwork
 docs_dir: docs
 site_dir: site
 
-# Keep docs site lean: openapi.json is used for codegen, not for the site.
+# Keep docs site lean:
+# - openapi.json is used for codegen, not for the site
+# - docs/README.md is intentionally excluded (single entrypoint is docs/index.md)
 exclude_docs: |
+  README.md
   openapi.json
 
 theme:
@@ -29,6 +32,7 @@ nav:
 
 markdown_extensions:
   - admonition
+  - attr_list
   - pymdownx.details
   - pymdownx.superfences
   - toc:

@@ -1,9 +1,3 @@
-<!--
-Metadata quick wins (for maintainers):
-- GitHub repo "About" description: "Async, typed Python client for kwork.ru (aiohttp + Pydantic) with WebSocket bot and web-flow helpers."
-- GitHub Topics: kwork, kwork-api, freelance, marketplace, asyncio, aiohttp, websockets, bot, pydantic, typed, python
--->
-
 # kwork
 
 [![CI](https://github.com/kesha1225/pykwork/actions/workflows/ci.yml/badge.svg)](https://github.com/kesha1225/pykwork/actions/workflows/ci.yml)
@@ -12,7 +6,7 @@ Metadata quick wins (for maintainers):
 [![License](https://img.shields.io/pypi/l/kwork.svg)](LICENSE)
 [![Typing](https://img.shields.io/badge/typing-py.typed-informational.svg)](https://peps.python.org/pep-0561/)
 
-Асинхронная обёртка над API фриланс-биржи [kwork.ru](https://kwork.ru/)
+Асинхронная, типизированная Python-библиотека для работы с [kwork.ru](https://kwork.ru/) (aiohttp + Pydantic).
 
 ## Доверие и ограничения
 
@@ -49,13 +43,11 @@ pip install "kwork[proxy]"
 import asyncio
 from kwork import Kwork
 
-async def main():
+async def main() -> None:
     async with Kwork(
         login="login",
         password="password",
-        # Таймаут на запросы (секунды) или aiohttp.ClientTimeout(...)
         timeout=30.0,
-        # Ретраи на 5xx/429 и сетевые ошибки (ограниченные попытки)
         retry_max_attempts=3,
     ) as api:
         me = await api.get_me()
@@ -64,46 +56,16 @@ async def main():
 asyncio.run(main())
 ```
 
-📚 **[Документация](docs/index.md)** — полноценная документация
+Ещё примеры см. в `examples/` и в [гайде](docs/guide.md).
 
-## Практические примеры
+## Документация
 
-### 1) Отклик на проект на бирже
+- [Главная](docs/index.md)
+- [Быстрый старт](docs/getting-started.md)
+- [Гайд (подробно)](docs/guide.md)
+- [API-справка](docs/api.md)
+- [Разработка](docs/development.md)
 
-Для отклика на проект библиотека повторяет web-цепочку запросов (как делает сайт/приложение).
-Минимальный рабочий пример уже есть в репозитории:
-
-```bash
-export KWORK_LOGIN="login"
-export KWORK_PASSWORD="password"
-export KWORK_PROJECT_ID="3094218"
-uv run python examples/web_exchange_offer.py
-```
-
-Важно:
-
-- это **web-endpoint** `kwork.ru`, он может меняться без предупреждения
-- у `description` на стороне сайта есть минимальная длина (в примере >= 150 символов)
-- соблюдай правила/лимиты площадки (иначе легко словить ограничения)
-
-
-### 2) Автоответчик на входящие сообщения (бот)
-
-Бот слушает события через WebSocket и отвечает по правилам/триггерам.
-
-Запуск готового примера:
-
-```bash
-export KWORK_LOGIN="login"
-export KWORK_PASSWORD="password"
-uv run python examples/auto_reply_bot.py
-```
-
-
-Ещё полезные скрипты:
-
-- `examples/projects_monitor.py` — мониторинг новых проектов по фильтрам (категории/цена)
-- `examples/dialogs.py` — список диалогов и непрочитанных сообщений
 
 ## Contributors
 
