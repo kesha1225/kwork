@@ -1,0 +1,45 @@
+site_name: kwork
+site_description: "Асинхронная Python-библиотека для работы с kwork.ru (aiohttp)"
+repo_name: kesha1225/pykwork
+repo_url: https://github.com/kesha1225/pykwork
+
+docs_dir: docs
+site_dir: site
+
+# Keep docs site lean: openapi.json is used for codegen, not for the site.
+exclude_docs: |
+  openapi.json
+
+theme:
+  name: material
+  language: ru
+  features:
+    - navigation.instant
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - search.highlight
+
+nav:
+  - Главная: index.md
+  - Быстрый старт: getting-started.md
+  - Гайд (подробно): guide.md
+  - API-справка: api.md
+  - Разработка: development.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_source: false
+            show_root_heading: true
+            show_signature_annotations: true

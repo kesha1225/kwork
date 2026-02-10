@@ -1,0 +1,55 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    # Avoid publishing from forks; publishing also requires secrets / PyPI config.
+    if: github.repository_owner == 'kesha1225' && secrets.PYPI_API_TOKEN != ''
+    env:
+      UV_PYTHON_DOWNLOADS: never
+      UV_PYTHON: "3.12"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Validate tag and changelog
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          python -c "import os, pathlib, tomllib; tag=os.environ['GITHUB_REF_NAME']; v=tomllib.loads(pathlib.Path('pyproject.toml').read_text())['project']['version']; exp=f'v{v}'; assert tag==exp, f'tag {tag} must match pyproject.toml version {exp}'"
+          python -c "import pathlib; assert pathlib.Path('CHANGELOG.md').exists(), 'CHANGELOG.md is required for releases'"
+
+      - name: Install uv
+        run: python -m pip install --upgrade pip uv
+
+      - name: Cache uv
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-3.12-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-3.12-
+            ${{ runner.os }}-uv-
+
+      - name: Build (sdist/wheel)
+        run: uv build --sdist --wheel --clear
+
+      - name: Publish to PyPI (token)
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+        run: |
+          uv publish --token "$UV_PUBLISH_TOKEN"

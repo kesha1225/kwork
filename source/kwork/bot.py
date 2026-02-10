@@ -1,7 +1,8 @@
 import asyncio
 import logging
+from collections import OrderedDict
 from collections.abc import AsyncIterator, Callable
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, TypeVar
 
 import websockets
 from kwork.client import KworkClient
@@ -9,10 +10,12 @@ from kwork.event_parser import EventParser
 from kwork.exceptions import KworkBotException, KworkException
 from kwork.schema import Message
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 WEBSOCKET_URI = "wss://notice.kwork.ru/ws/public/{}"
 RECONNECT_DELAY = 10
+
+_T = TypeVar("_T")
 
 
 class Handler(NamedTuple):
@@ -29,15 +32,45 @@ class KworkBot(KworkClient):
         password: str,
         proxy: str | None = None,
         phone_last: str | None = None,
+        *,
+        username_cache_max: int = 4096,
+        dialog_state_cache_max: int = 8192,
     ) -> None:
         super().__init__(login, password, proxy, phone_last)
         self._handlers: list[Handler] = []
         self._event_parser = EventParser(self)
-        # Cache dialog metadata to avoid scanning dialogs / loading full inbox history for every message.
-        self._user_id_to_username: dict[int, str] = {}
-        # Track dialogs we've already classified in this process.
-        self._on_start_fired_for_user_ids: set[int] = set()
-        self._on_start_not_first_for_user_ids: set[int] = set()
+
+        if username_cache_max < 0:
+            raise ValueError("username_cache_max must be >= 0")
+        if dialog_state_cache_max < 0:
+            raise ValueError("dialog_state_cache_max must be >= 0")
+
+        self._username_cache_max = username_cache_max
+        self._dialog_state_cache_max = dialog_state_cache_max
+
+        # Bounded LRU caches to prevent unbounded memory growth in long-running bots.
+        # - user_id -> username: avoids re-scanning dialogs.
+        # - on_start suppression set: ensures on_start handler fires at most once per user_id in this process.
+        self._user_id_to_username: OrderedDict[int, str] = OrderedDict()
+        self._on_start_suppressed_user_ids: OrderedDict[int, bool] = OrderedDict()
+
+    @staticmethod
+    def _lru_get(cache: OrderedDict[int, _T], key: int) -> _T | None:
+        try:
+            value = cache[key]
+        except KeyError:
+            return None
+        cache.move_to_end(key)
+        return value
+
+    @staticmethod
+    def _lru_set(cache: OrderedDict[int, _T], key: int, value: _T, *, maxsize: int) -> None:
+        if maxsize == 0:
+            return
+        cache[key] = value
+        cache.move_to_end(key)
+        while len(cache) > maxsize:
+            cache.popitem(last=False)
 
     def message_handler(
         self,
@@ -85,6 +118,10 @@ class KworkBot(KworkClient):
                     yield message
             except KworkException as e:
                 logger.exception("Error in listener: %s. Restarting...", e)
+                await asyncio.sleep(RECONNECT_DELAY)
+            except Exception as e:
+                # Be resilient to parsing / unexpected schema changes: keep the bot running.
+                logger.exception("Unexpected error in listener: %s. Restarting...", e)
                 await asyncio.sleep(RECONNECT_DELAY)
 
     async def _websocket_loop(self) -> AsyncIterator[Message]:
@@ -146,9 +183,7 @@ class KworkBot(KworkClient):
         user_id = message.from_id
 
         # Fast-path: avoid repeated API calls after we've already made a decision for this dialog.
-        if user_id in self._on_start_fired_for_user_ids:
-            return False
-        if user_id in self._on_start_not_first_for_user_ids:
+        if self._lru_get(self._on_start_suppressed_user_ids, user_id) is not None:
             return False
 
         username = await self._get_username_for_user_id(user_id)
@@ -161,28 +196,38 @@ class KworkBot(KworkClient):
         pages = paging.get("pages")
 
         if isinstance(pages, int) and pages > 1:
-            self._on_start_not_first_for_user_ids.add(user_id)
+            self._lru_set(
+                self._on_start_suppressed_user_ids,
+                user_id,
+                True,
+                maxsize=self._dialog_state_cache_max,
+            )
             return False
 
         if pages is None:
             # Be defensive if API doesn't return paging: fall back to the full dialog fetch only when ambiguous.
             if len(page_messages) > 1:
-                self._on_start_not_first_for_user_ids.add(user_id)
+                self._lru_set(
+                    self._on_start_suppressed_user_ids,
+                    user_id,
+                    True,
+                    maxsize=self._dialog_state_cache_max,
+                )
                 return False
             dialog_messages = await self.get_dialog_with_user(username)
             is_first = len(dialog_messages) == 1
         else:
             is_first = len(page_messages) == 1
 
-        if is_first:
-            self._on_start_fired_for_user_ids.add(user_id)
-        else:
-            self._on_start_not_first_for_user_ids.add(user_id)
+        # Whether it's first or not, we must not fire on_start again for this user_id in this process.
+        self._lru_set(
+            self._on_start_suppressed_user_ids, user_id, True, maxsize=self._dialog_state_cache_max
+        )
         return is_first
 
     async def _get_username_for_user_id(self, user_id: int) -> str | None:
-        cached = self._user_id_to_username.get(user_id)
-        if cached:
+        cached = self._lru_get(self._user_id_to_username, user_id)
+        if cached is not None:
             return cached
 
         page = 1
@@ -193,7 +238,12 @@ class KworkBot(KworkClient):
 
             for dialog in dialogs:
                 if dialog.user_id == user_id and dialog.username:
-                    self._user_id_to_username[user_id] = dialog.username
+                    self._lru_set(
+                        self._user_id_to_username,
+                        user_id,
+                        dialog.username,
+                        maxsize=self._username_cache_max,
+                    )
                     return dialog.username
 
             page += 1

@@ -4,12 +4,14 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 from urllib.parse import unquote_plus
 
+from pydantic import ValidationError
+
 from kwork.schema import BaseEvent, EventType, Message, Notify
 
 if TYPE_CHECKING:
     from kwork.client import KworkClient
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def _load_json_object(text: str) -> dict[str, Any] | None:
@@ -87,7 +89,7 @@ class EventParser:
                 return None
 
             return BaseEvent(**event_data)
-        except (json.JSONDecodeError, KeyError) as e:
+        except (json.JSONDecodeError, KeyError, TypeError, ValueError, ValidationError) as e:
             logger.warning("Failed to parse event: %s", e)
             return None
 
@@ -129,9 +131,24 @@ class EventParser:
         if data is None:
             return None
 
+        from_raw = data.get("from")
+        text = data.get("inboxMessage")
+        if not isinstance(text, str):
+            return None
+
+        if isinstance(from_raw, int):
+            from_id = from_raw
+        else:
+            if from_raw is None:
+                return None
+            try:
+                from_id = int(from_raw)
+            except (TypeError, ValueError):
+                return None
+
         return ParsedMessage(
-            from_id=data["from"],
-            text=data["inboxMessage"],
+            from_id=from_id,
+            text=text,
             to_user_id=data.get("to_user_id"),
             inbox_id=data.get("inbox_id"),
             title=data.get("title"),

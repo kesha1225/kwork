@@ -5,23 +5,36 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "kwork"
 version = "0.2.0"
-description = "Simple async wrapper for kwork."
+description = "Async, typed Python client for kwork.ru (aiohttp + Pydantic) with WebSocket bot and web-flow helpers."
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.12"
 authors = [
     { name = "kesha1225" },
 ]
-keywords = ["kwork", "freelance", "api", "async", "aiohttp", "bot"]
+keywords = [
+    "kwork",
+    "kwork.ru",
+    "freelance",
+    "marketplace",
+    "api",
+    "async",
+    "asyncio",
+    "aiohttp",
+    "websocket",
+    "bot",
+    "pydantic",
+    "typed",
+]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python :: 3.14",
     "Framework :: AsyncIO",
     "Typing :: Typed",
 ]
@@ -40,6 +53,9 @@ proxy = [
 Homepage = "https://github.com/kesha1225/pykwork"
 Repository = "https://github.com/kesha1225/pykwork"
 Issues = "https://github.com/kesha1225/pykwork/issues"
+Documentation = "https://github.com/kesha1225/pykwork/blob/HEAD/docs/index.md"
+Changelog = "https://github.com/kesha1225/pykwork/blob/HEAD/CHANGELOG.md"
+Security = "https://github.com/kesha1225/pykwork/blob/HEAD/SECURITY.md"
 
 [tool.setuptools]
 packages = ["kwork", "kwork.schema"]
@@ -60,6 +76,12 @@ dev = [
     "ruff>=0.14.7",
     "basedpyright>=1.29.0",
     "pytest>=8.0.0",
+]
+docs = [
+    "mkdocs>=1.6.0",
+    "mkdocs-material>=9.5.0",
+    "mkdocstrings[python]>=0.26.0",
+    "pymdown-extensions>=10.8.0",
 ]
 
 [tool.basedpyright]

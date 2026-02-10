@@ -15,7 +15,7 @@ from aiohttp import ClientResponse
 
 from kwork.exceptions import KworkException, KworkHTTPException, KworkRetryExceeded
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 AUTH_HEADER = "Basic bW9iaWxlX2FwaTpxRnZmUmw3dw=="
 API_HOST = "https://api.kwork.ru/{}"
@@ -642,7 +642,7 @@ class KworkAPI:
             except (aiohttp.ClientError, asyncio.TimeoutError) as e:
                 if not enable_retry or attempts >= attempts_limit:
                     raise KworkRetryExceeded(
-                        f"Request POST /{endpoint} failed after {attempts} attempts: {e}",
+                        f"Request POST /{endpoint} failed after {attempts} attempts: {_format_exception_short(e)}",
                         attempts=attempts,
                         last_error=e,
                     ) from e

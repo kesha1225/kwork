@@ -15,7 +15,7 @@ from yarl import URL
 from kwork.api import KworkAPI
 from kwork.exceptions import KworkException
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 DEFAULT_WEB_BASE_URL = "https://kwork.ru/"
